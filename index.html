@@ -139,8 +139,9 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
 .btn-primary:disabled{opacity:0.6;cursor:not-allowed}
 .btn-danger{height:36px;padding:0 14px;border-radius:10px;border:2px solid #FFB3B3;background:#FFF0F0;color:#c0392b;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-del{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #FFB3B3;background:#FFF0F0;color:#c0392b;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
-.entry{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1.5px dashed var(--pk-border)}
-.entry:last-child{border-bottom:none}
+.entry{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;margin-bottom:6px;border:1.5px solid transparent}
+.entry.husband{background:var(--pk-blue-bg);border-color:var(--pk-blue-border)}
+.entry.wife{background:var(--pk-pink-bg);border-color:var(--pk-pink-border)}
 .entry-main{flex:1;min-width:0}
 .entry-top{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:3px}
 .entry-title{font-size:13px;font-weight:700;color:var(--pk-dark)}
@@ -151,7 +152,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
 .badge.cat{background:#FFFDE0;color:#9B7A20;border:1.5px solid #FFD93D}
 .amount{font-size:14px;font-weight:700;color:var(--pk-dark);white-space:nowrap}
 .empty{text-align:center;padding:2rem 0;color:#bbb;font-size:13px}
-.entry.deleted{opacity:0.35;text-decoration:line-through;filter:grayscale(1)}
+.entry.deleted{opacity:0.35;text-decoration:line-through;filter:grayscale(1);background:#F5F5F5!important;border-color:#ddd!important}
 .entry.deleted .btn-del,.entry.deleted .btn-restore{text-decoration:none;filter:none}
 .btn-restore{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #B3D9B3;background:#F0FFF0;color:#2e7d32;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
 .filter-row{display:flex;gap:6px;margin-bottom:8px}
@@ -721,7 +722,7 @@ function entryHTML(e, showDel){
         ? `<button class="btn-restore" onclick="restoreEntry('${e.firestoreId}')">復元</button>`
         : `<button class="btn-del" onclick="deleteEntry('${e.firestoreId}')">削除</button>`)
     : '';
-  return `<div class="entry${delCls}"><div class="entry-main"><div class="entry-top"><span class="entry-title">${e.store}</span><span class="badge ${cls}">${n}</span><span class="badge cat">${e.category}</span></div><div class="entry-meta">${e.date}${e.memo?' · '+e.memo:''}</div></div><span class="amount">${fmt(e.amount)}</span>${btn}</div>`;
+  return `<div class="entry ${cls}${delCls}"><div class="entry-main"><div class="entry-top"><span class="entry-title">${e.store}</span><span class="badge ${cls}">${n}</span><span class="badge cat">${e.category}</span></div><div class="entry-meta">${e.date}${e.memo?' · '+e.memo:''}</div></div><span class="amount">${fmt(e.amount)}</span>${btn}</div>`;
 }
 
 window.switchTab = function(t){
