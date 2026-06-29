@@ -10,8 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: warikan-appli
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+      - name: Write service account
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/sa.json
+      - name: Deploy to Firebase
+        run: firebase deploy --only hosting --project warikan-appli
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
