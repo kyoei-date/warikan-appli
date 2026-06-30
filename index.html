@@ -289,7 +289,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
       <div style="height:12px"></div>
       <div class="grid2">
         <div class="metric blue">
-          <div class="metric-label">今月の合計</div>
+          <div class="metric-label">合計</div>
           <div class="metric-value" id="total-amount">¥0</div>
         </div>
         <div class="metric pink">
@@ -755,7 +755,7 @@ window.switchTab = function(t){
 };
 
 function renderHome(){
-  const es = filterEntries(currentMonth(),'','');
+  const es = filterEntries('','','');
   const total = es.reduce((s,e)=>s+e.amount,0);
   document.getElementById('total-amount').textContent = fmt(total);
   document.getElementById('total-count').textContent = es.length+'件';
@@ -775,7 +775,7 @@ function renderHome(){
   else if(diff>0){ ba.textContent=fmt(Math.abs(diff/2)); bd.textContent=names.wife+'が'+names.husband+'に'+fmt(Math.abs(diff/2))+'支払うと精算！'; }
   else if(diff<0){ ba.textContent=fmt(Math.abs(diff/2)); bd.textContent=names.husband+'が'+names.wife+'に'+fmt(Math.abs(diff/2))+'支払うと精算！'; }
   else{ ba.textContent='±¥0'; bd.textContent='ぴったり折半！すごい！'; }
-  document.getElementById('recent-list').innerHTML = es.slice(0,5).map(e=>entryHTML(e,false)).join('') || '<div class="empty"><svg width="56" height="56" viewBox="0 0 52 52" style="margin-bottom:8px;opacity:0.5"><ellipse cx="26" cy="28" rx="20" ry="18" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="26" cy="14" rx="14" ry="13" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="20" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="32" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><circle cx="22" cy="15" r="2.5" fill="#2D3436"/><circle cx="30" cy="15" r="2.5" fill="#2D3436"/><circle cx="22.8" cy="14.2" r="1" fill="#fff"/><circle cx="30.8" cy="14.2" r="1" fill="#fff"/><ellipse cx="20" cy="19" rx="3" ry="2" fill="#FF9F9F"/><ellipse cx="32" cy="19" rx="3" ry="2" fill="#FF9F9F"/><path d="M22 21.5 Q26 24 30 21.5" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="10" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><path d="M20 44 Q26 48 32 44" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/></svg><div>今月の記録がありません</div></div>';
+  document.getElementById('recent-list').innerHTML = es.slice(0,5).map(e=>entryHTML(e,false)).join('') || '<div class="empty"><svg width="56" height="56" viewBox="0 0 52 52" style="margin-bottom:8px;opacity:0.5"><ellipse cx="26" cy="28" rx="20" ry="18" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="26" cy="14" rx="14" ry="13" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="20" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="32" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><circle cx="22" cy="15" r="2.5" fill="#2D3436"/><circle cx="30" cy="15" r="2.5" fill="#2D3436"/><circle cx="22.8" cy="14.2" r="1" fill="#fff"/><circle cx="30.8" cy="14.2" r="1" fill="#fff"/><ellipse cx="20" cy="19" rx="3" ry="2" fill="#FF9F9F"/><ellipse cx="32" cy="19" rx="3" ry="2" fill="#FF9F9F"/><path d="M22 21.5 Q26 24 30 21.5" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="10" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><path d="M20 44 Q26 48 32 44" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/></svg><div>記録がありません</div></div>';
 }
 
 function renderHistory(){
