@@ -119,13 +119,14 @@ body{font-family:'Hiragino Maru Gothic ProN','Hiragino Rounded Gothic Pro',sans-
   .name-card{padding:14px 18px}
 }
 
-.header{background:var(--pk-yellow);border-radius:0 0 20px 20px;padding:16px 18px 18px;display:flex;align-items:center;gap:12px;border-bottom:2.5px solid #E5B800}
+.header{background:var(--pk-yellow);border-radius:0 0 20px 20px;padding:16px 18px 18px;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;border-bottom:2.5px solid #E5B800}
 .header-mascot{width:48px;height:48px;flex-shrink:0}
-.header-text h1{font-size:18px;font-weight:700;color:#7B5200;margin-bottom:2px}
-.header-text p{font-size:12px;color:#9B7A20}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.header-user{font-size:11px;color:#9B7A20;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn-signout{height:28px;padding:0 10px;border-radius:8px;border:1.5px solid #E5B800;background:rgba(255,255,255,0.5);color:#7B5200;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.header-text{min-width:0;flex:1;overflow:hidden}
+.header-text h1{font-size:18px;font-weight:700;color:#7B5200;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-text p{font-size:12px;color:#9B7A20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-right{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.header-user{font-size:11px;color:#9B7A20;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-signout{height:28px;padding:0 10px;border-radius:8px;border:1.5px solid #E5B800;background:rgba(255,255,255,0.5);color:#7B5200;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 
 .content{padding:12px 14px 0}
 .section{display:none}.section.active{display:block}
@@ -184,7 +185,8 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
 .btn-restore{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #B3D9B3;background:#F0FFF0;color:#2e7d32;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
 .btn-edit{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #FFD93D;background:#FFFDE0;color:#7B5200;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
 .entry-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
-.entry-history{font-size:10px;color:#7a7a7a;font-weight:600;margin-top:2px;line-height:1.4}
+.entry-history{font-size:10px;color:#7a7a7a;font-weight:600;margin-top:2px;line-height:1.5}
+.entry-history div{margin:0}
 #edit-modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;align-items:center;justify-content:center;padding:16px}
 #edit-modal .card{width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
 .filter-row{display:flex;gap:6px;margin-bottom:8px}
@@ -925,7 +927,7 @@ function entryHTML(e, showDel){
   const createdLine = e.createdAt ? `登録: ${fmtDT(e.createdAt)}${e.addedBy?' '+nameForUid(e.addedBy):''}` : '';
   const updatedLine = e.updatedAt ? `修正: ${fmtDT(e.updatedAt)}${e.updatedBy?' '+nameForUid(e.updatedBy):''}` : '';
   const historyLine = (createdLine || updatedLine)
-    ? `<div class="entry-history">${[createdLine,updatedLine].filter(Boolean).join(' ｜ ')}</div>`
+    ? `<div class="entry-history">${[createdLine,updatedLine].filter(Boolean).map(l=>`<div>${l}</div>`).join('')}</div>`
     : '';
   return `<div class="entry ${cls}${delCls}"><div class="entry-main"><div class="entry-top"><span class="entry-title">${e.store}</span><span class="badge ${cls}">${n}</span><span class="badge cat">${e.category}</span></div><div class="entry-meta">${e.date}${e.memo?' · '+e.memo:''}</div>${historyLine}</div><span class="amount">${fmt(e.amount)}</span>${btns}</div>`;
 }
