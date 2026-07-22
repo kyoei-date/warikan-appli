@@ -178,6 +178,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
 .badge.husband{background:var(--pk-blue-bg);color:var(--pk-blue-text);border:1.5px solid var(--pk-blue-border)}
 .badge.wife{background:var(--pk-pink-bg);color:var(--pk-pink-text);border:1.5px solid var(--pk-pink-border)}
 .badge.cat{background:#FFFDE0;color:#9B7A20;border:1.5px solid #FFD93D}
+.badge.full{background:#FFF0E0;color:#B85C00;border:1.5px solid #FFB870}
 .amount{font-size:14px;font-weight:700;color:var(--pk-dark);white-space:nowrap}
 .empty{text-align:center;padding:2rem 0;color:#bbb;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .entry.deleted{opacity:0.35;text-decoration:line-through;filter:grayscale(1);background:#F5F5F5!important;border-color:#ddd!important}
@@ -384,6 +385,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
           <div><label>金額（円）</label><input type="number" id="f-amount" placeholder="0" min="0" inputmode="numeric"></div>
           <div><label>カテゴリ</label><select id="f-category"><option>食費</option><option>外食</option><option>日用品</option><option>交通費</option><option>光熱費</option><option>医療費</option><option>娯楽</option><option>その他</option></select></div>
         </div>
+        <div class="form-row full"><label>精算方法</label><select id="f-split"><option value="split">🔗 割り勘（半分ずつ負担）</option><option value="full">👤 相手のみが全額負担</option></select></div>
         <div class="form-row full" style="margin-bottom:8px"><label>メモ（任意）</label><input type="text" id="f-memo" placeholder="備考"></div>
         <button class="btn-primary" id="add-btn" onclick="addEntry()">記録する</button>
       </div>
@@ -443,6 +445,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
         <div><label>金額（円）</label><input type="number" id="e-amount" placeholder="0" min="0" inputmode="numeric"></div>
         <div><label>カテゴリ</label><select id="e-category"><option>食費</option><option>外食</option><option>日用品</option><option>交通費</option><option>光熱費</option><option>医療費</option><option>娯楽</option><option>その他</option></select></div>
       </div>
+      <div class="form-row full"><label>精算方法</label><select id="e-split"><option value="split">🔗 割り勘（半分ずつ負担）</option><option value="full">👤 相手のみが全額負担</option></select></div>
       <div class="form-row full" style="margin-bottom:8px"><label>メモ（任意）</label><input type="text" id="e-memo" placeholder="備考"></div>
       <div style="display:flex;gap:8px">
         <button class="btn-danger" style="flex:1" onclick="closeEditModal()">キャンセル</button>
@@ -745,13 +748,14 @@ window.addEntry = function(){
   const amount = parseInt(document.getElementById('f-amount').value);
   const cat = document.getElementById('f-category').value;
   const memo = document.getElementById('f-memo').value.trim();
+  const splitType = document.getElementById('f-split').value;
   if(!date||!store||!amount||amount<=0){ alert('日付・店舗・金額を入力してください'); return; }
 
   // 楽観的UI更新: 先にローカルへ反映してすぐ画面に表示する
   const tempId = '_temp_' + Date.now();
   const newEntry = {
     firestoreId: tempId, id: Date.now(), date, payer, store, amount,
-    category: cat, memo, addedBy: currentUser.uid, deleted: false, _pending: true
+    category: cat, memo, splitType, addedBy: currentUser.uid, deleted: false, _pending: true
   };
   entries.unshift(newEntry);
   entries.sort((a,b) => (b.date||'').localeCompare(a.date||'') || (b.id||0)-(a.id||0));
@@ -759,12 +763,13 @@ window.addEntry = function(){
   document.getElementById('f-store').value = '';
   document.getElementById('f-amount').value = '';
   document.getElementById('f-memo').value = '';
+  document.getElementById('f-split').value = 'split';
   populateMonthSelects();
   switchTab('home');
   setSyncDot('syncing');
 
   addDoc(collection(db,'households',householdId,'entries'),{
-    id: newEntry.id, date, payer, store, amount, category: cat, memo,
+    id: newEntry.id, date, payer, store, amount, category: cat, memo, splitType,
     addedBy: currentUser.uid, createdAt: serverTimestamp(), deleted: false
   }).then(()=>{
     // onSnapshotが発火して本物のデータに置き換わるのでここでは何もしない
@@ -817,6 +822,7 @@ window.openEditModal = function(firestoreId){
   document.getElementById('e-amount').value = e.amount || '';
   document.getElementById('e-category').value = e.category || '食費';
   document.getElementById('e-memo').value = e.memo || '';
+  document.getElementById('e-split').value = e.splitType || 'split';
   document.getElementById('edit-modal').style.display = 'flex';
 };
 
@@ -834,18 +840,19 @@ window.saveEditEntry = function(){
   const amount = parseInt(document.getElementById('e-amount').value);
   const cat = document.getElementById('e-category').value;
   const memo = document.getElementById('e-memo').value.trim();
+  const splitType = document.getElementById('e-split').value;
   if(!date||!store||!amount||amount<=0){ alert('日付・店舗・金額を入力してください'); return; }
 
   const target = entries.find(e => e.firestoreId === id);
   const prev = target ? { ...target } : null;
-  if(target){ Object.assign(target, { date, payer, store, amount, category: cat, memo, updatedBy: currentUser.uid }); }
+  if(target){ Object.assign(target, { date, payer, store, amount, category: cat, memo, splitType, updatedBy: currentUser.uid }); }
 
   closeEditModal();
   rerenderCurrentTab();
   setSyncDot('syncing');
 
   updateDoc(doc(db,'households',householdId,'entries',id), {
-    date, payer, store, amount, category: cat, memo,
+    date, payer, store, amount, category: cat, memo, splitType,
     updatedAt: serverTimestamp(), updatedBy: currentUser.uid
   }).catch(e=>{
     if(target && prev) Object.assign(target, prev);
@@ -886,6 +893,17 @@ function filterEntriesAll(m,p,c){
   });
 }
 
+// 精算バランスを計算（+なら妻→夫、-なら夫→妻）
+// 割り勘: 支払額の半分を相手が負担 / 相手のみ負担: 支払額の全額を相手が負担
+function computeBalance(es){
+  let bal = 0;
+  es.forEach(e=>{
+    const owed = e.splitType==='full' ? e.amount : e.amount/2;
+    bal += e.payer==='husband' ? owed : -owed;
+  });
+  return bal;
+}
+
 function getMonths(){ return [...new Set(entries.map(e=>getYM(e.date)))].filter(Boolean).sort().reverse(); }
 
 function populateMonthSelects(){
@@ -918,6 +936,8 @@ function entryHTML(e, showDel){
   const n = e.payer==='husband' ? names.husband : names.wife;
   const cls = e.payer==='husband' ? 'husband' : 'wife';
   const delCls = e.deleted ? ' deleted' : '';
+  const other = e.payer==='husband' ? names.wife : names.husband;
+  const splitBadge = e.splitType==='full' ? `<span class="badge full">${other}が全額負担</span>` : '';
   let btns = '';
   if(showDel){
     const editBtn = !e.deleted ? `<button class="btn-edit" onclick="openEditModal('${e.firestoreId}')">編集</button>` : '';
@@ -931,7 +951,7 @@ function entryHTML(e, showDel){
   const historyLine = (createdLine || updatedLine)
     ? `<div class="entry-history">${[createdLine,updatedLine].filter(Boolean).map(l=>`<div>${l}</div>`).join('')}</div>`
     : '';
-  return `<div class="entry ${cls}${delCls}"><div class="entry-main"><div class="entry-top"><span class="entry-title">${e.store}</span><span class="badge ${cls}">${n}</span><span class="badge cat">${e.category}</span></div><div class="entry-meta">${e.date}${e.memo?' · '+e.memo:''}</div>${historyLine}</div><span class="amount">${fmt(e.amount)}</span>${btns}</div>`;
+  return `<div class="entry ${cls}${delCls}"><div class="entry-main"><div class="entry-top"><span class="entry-title">${e.store}</span><span class="badge ${cls}">${n}</span><span class="badge cat">${e.category}</span>${splitBadge}</div><div class="entry-meta">${e.date}${e.memo?' · '+e.memo:''}</div>${historyLine}</div><span class="amount">${fmt(e.amount)}</span>${btns}</div>`;
 }
 
 window.switchTab = function(t){
@@ -960,11 +980,11 @@ function renderHome(){
   document.getElementById('gauge-pink').style.width = wPct+'%';
   document.getElementById('gauge-h-pct').textContent = hPct+'%';
   document.getElementById('gauge-w-pct').textContent = wPct+'%';
-  const diff = hT-wT;
+  const bal = computeBalance(es);
   const ba = document.getElementById('balance-amount'), bd = document.getElementById('balance-desc');
   if(total===0){ ba.textContent='±¥0'; bd.textContent='記録がありません'; }
-  else if(diff>0){ ba.textContent=fmt(Math.abs(diff/2)); bd.textContent=names.wife+'が'+names.husband+'に'+fmt(Math.abs(diff/2))+'支払うと精算！'; }
-  else if(diff<0){ ba.textContent=fmt(Math.abs(diff/2)); bd.textContent=names.husband+'が'+names.wife+'に'+fmt(Math.abs(diff/2))+'支払うと精算！'; }
+  else if(bal>0){ ba.textContent=fmt(Math.abs(bal)); bd.textContent=names.wife+'が'+names.husband+'に'+fmt(Math.abs(bal))+'支払うと精算！'; }
+  else if(bal<0){ ba.textContent=fmt(Math.abs(bal)); bd.textContent=names.husband+'が'+names.wife+'に'+fmt(Math.abs(bal))+'支払うと精算！'; }
   else{ ba.textContent='±¥0'; bd.textContent='ぴったり折半！すごい！'; }
   document.getElementById('recent-list').innerHTML = es.slice(0,5).map(e=>entryHTML(e,false)).join('') || '<div class="empty"><svg width="56" height="56" viewBox="0 0 52 52" style="margin-bottom:8px;opacity:0.5"><ellipse cx="26" cy="28" rx="20" ry="18" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="26" cy="14" rx="14" ry="13" fill="#FFD93D" stroke="#E5B800" stroke-width="2"/><ellipse cx="20" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="32" cy="11" rx="5" ry="6" fill="#FF9F9F" stroke="#E5B800" stroke-width="1.5"/><circle cx="22" cy="15" r="2.5" fill="#2D3436"/><circle cx="30" cy="15" r="2.5" fill="#2D3436"/><circle cx="22.8" cy="14.2" r="1" fill="#fff"/><circle cx="30.8" cy="14.2" r="1" fill="#fff"/><ellipse cx="20" cy="19" rx="3" ry="2" fill="#FF9F9F"/><ellipse cx="32" cy="19" rx="3" ry="2" fill="#FF9F9F"/><path d="M22 21.5 Q26 24 30 21.5" fill="none" stroke="#2D3436" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="10" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="5" ry="4" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/><path d="M20 44 Q26 48 32 44" fill="#FFD93D" stroke="#E5B800" stroke-width="1.5"/></svg><div>記録がありません</div></div>';
 }
@@ -991,12 +1011,12 @@ function renderStats(){
   const wT = es.filter(e=>e.payer==='wife').reduce((s,e)=>s+e.amount,0);
   document.getElementById('s-husband').textContent = fmt(hT);
   document.getElementById('s-wife').textContent = fmt(wT);
-  const diff = hT-wT;
+  const bal = computeBalance(es);
   const st = document.getElementById('settle-text');
   if(es.length===0) st.textContent='記録がありません';
-  else if(diff===0) st.textContent='ぴったり折半！';
-  else if(diff>0) st.textContent=names.wife+' → '+names.husband+'  '+fmt(diff/2);
-  else st.textContent=names.husband+' → '+names.wife+'  '+fmt(Math.abs(diff)/2);
+  else if(bal===0) st.textContent='ぴったり折半！';
+  else if(bal>0) st.textContent=names.wife+' → '+names.husband+'  '+fmt(bal);
+  else st.textContent=names.husband+' → '+names.wife+'  '+fmt(Math.abs(bal));
   const cats={};
   es.forEach(e=>{ cats[e.category]=(cats[e.category]||0)+e.amount; });
   const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
