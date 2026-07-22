@@ -184,6 +184,7 @@ input:focus,select:focus{outline:none;border-color:var(--pk-yellow)}
 .entry.deleted{opacity:0.35;text-decoration:line-through;filter:grayscale(1);background:#F5F5F5!important;border-color:#ddd!important}
 .entry.deleted .btn-del,.entry.deleted .btn-restore{text-decoration:none;filter:none}
 .btn-restore{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #B3D9B3;background:#F0FFF0;color:#2e7d32;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
+.btn-harddel{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #e74c3c;background:#e74c3c;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
 .btn-edit{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid #FFD93D;background:#FFFDE0;color:#7B5200;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
 .entry-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
 .entry-history{font-size:10px;color:#7a7a7a;font-weight:600;margin-top:2px;line-height:1.5}
@@ -811,6 +812,25 @@ window.restoreEntry = function(firestoreId){
     });
 };
 
+window.hardDeleteEntry = function(firestoreId){
+  if(!isAdmin()){ alert(names.husband+'のみ完全削除できます'); return; }
+  const target = entries.find(e => e.firestoreId === firestoreId);
+  if(!target) return;
+  if(!confirm(`「${target.store}」（${fmt(target.amount)}）を完全に削除しますか？\nこの操作は元に戻せません。`)) return;
+  const backup = entries.slice();
+  entries = entries.filter(e => e.firestoreId !== firestoreId);
+  rerenderCurrentTab();
+  setSyncDot('syncing');
+  deleteDoc(doc(db,'households',householdId,'entries',firestoreId))
+    .then(()=>{ setSyncDot('synced'); })
+    .catch(e=>{
+      entries = backup;
+      rerenderCurrentTab();
+      alert('完全削除に失敗しました: ' + e.message);
+      setSyncDot('error');
+    });
+};
+
 // ===== 編集モーダル =====
 window.openEditModal = function(firestoreId){
   const e = entries.find(x => x.firestoreId === firestoreId);
@@ -932,6 +952,11 @@ function nameForUid(uid){
   return userNames[uid] || '';
 }
 
+// 完全削除は「夫」役割（拓也）のみに許可
+function isAdmin(){
+  return !!currentUser && memberRoles[currentUser.uid] === 'husband';
+}
+
 function entryHTML(e, showDel){
   const n = e.payer==='husband' ? names.husband : names.wife;
   const cls = e.payer==='husband' ? 'husband' : 'wife';
@@ -941,8 +966,9 @@ function entryHTML(e, showDel){
   let btns = '';
   if(showDel){
     const editBtn = !e.deleted ? `<button class="btn-edit" onclick="openEditModal('${e.firestoreId}')">編集</button>` : '';
+    const hardDelBtn = (e.deleted && isAdmin()) ? `<button class="btn-harddel" onclick="hardDeleteEntry('${e.firestoreId}')">完全削除</button>` : '';
     const delRestoreBtn = e.deleted
-      ? `<button class="btn-restore" onclick="restoreEntry('${e.firestoreId}')">復元</button>`
+      ? `<button class="btn-restore" onclick="restoreEntry('${e.firestoreId}')">復元</button>${hardDelBtn}`
       : `<button class="btn-del" onclick="deleteEntry('${e.firestoreId}')">削除</button>`;
     btns = `<div class="entry-actions">${editBtn}${delRestoreBtn}</div>`;
   }
